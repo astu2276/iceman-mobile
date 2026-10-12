@@ -1,0 +1,10 @@
+{
+  "name": "ICEMAN Móvil",
+  "short_name": "ICEMAN",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0284c7",
+  "description": "Acceso directo a la app móvil de ICEMAN",
+  "orientation": "portrait"
+}
