@@ -183,6 +183,13 @@
   <script>
     const STORAGE_KEY = 'iceman-mobile-demo-v1';
 
+    const deepClone = (value) => {
+      if (typeof structuredClone === 'function') {
+        return structuredClone(value);
+      }
+      return JSON.parse(JSON.stringify(value));
+    };
+
     const defaultData = {
       empresa: 'HIELOS ICEMAN',
       clientes: [
@@ -203,11 +210,11 @@
 
     function loadState() {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return structuredClone(defaultData);
+      if (!raw) return deepClone(defaultData);
       try {
         return JSON.parse(raw);
       } catch {
-        return structuredClone(defaultData);
+        return deepClone(defaultData);
       }
     }
 
@@ -509,7 +516,7 @@
       if (!confirmar) return;
 
       localStorage.removeItem(STORAGE_KEY);
-      state = structuredClone(defaultData);
+      state = deepClone(defaultData);
       saveState();
       actualizarNombreEmpresaVisual();
       renderClientes();
