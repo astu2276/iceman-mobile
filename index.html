@@ -142,20 +142,29 @@
         <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Cliente</label>
         <select id="ped-cliente" required class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none h-11"></select>
       </div>
-      <div>
-        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Producto</label>
-        <input type="text" id="ped-producto" value="Hielo Picado" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
-      </div>
+
       <div class="grid grid-cols-2 gap-2">
         <div>
-          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Bolsas</label>
-          <input type="number" id="ped-cant" min="1" value="5" required class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Hielo Cubito</label>
+          <input type="number" id="ped-cant-cubito" min="0" value="0" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
         </div>
         <div>
-          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Precio (€)</label>
-          <input type="number" id="ped-precio" step="0.01" min="0" value="2.50" required class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Hielo Picado</label>
+          <input type="number" id="ped-cant-picado" min="0" value="0" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
         </div>
       </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Precio Cubito (€)</label>
+          <input type="number" id="ped-precio-cubito" step="0.01" min="0" value="2.50" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Precio Picado (€)</label>
+          <input type="number" id="ped-precio-picado" step="0.01" min="0" value="3.00" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+        </div>
+      </div>
+
       <div>
         <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Repartidor</label>
         <select id="ped-repartidor" required class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none h-11"></select>
@@ -339,15 +348,15 @@
 
     function AbrirModalPedido() {
       renderSelects();
-      document.getElementById('ped-producto').value = 'Hielo Picado';
       document.getElementById('modal-pedido').classList.remove('hidden');
     }
 
     function CerrarModalPedido() {
       document.getElementById('modal-pedido').classList.add('hidden');
-      document.getElementById('ped-cant').value = 5;
-      document.getElementById('ped-precio').value = 2.5;
-      document.getElementById('ped-producto').value = 'Hielo Picado';
+      document.getElementById('ped-cant-cubito').value = 0;
+      document.getElementById('ped-cant-picado').value = 0;
+      document.getElementById('ped-precio-cubito').value = 2.50;
+      document.getElementById('ped-precio-picado').value = 3.00;
       document.getElementById('ped-nota').value = '';
     }
 
@@ -370,30 +379,53 @@
     function savePedido(event) {
       event.preventDefault();
       const clienteId = Number(document.getElementById('ped-cliente').value);
-      const producto = document.getElementById('ped-producto').value.trim() || 'Hielo Picado';
-      const cantidad = Number(document.getElementById('ped-cant').value);
-      const precio = Number(document.getElementById('ped-precio').value);
       const repartidorId = Number(document.getElementById('ped-repartidor').value);
       const nota = document.getElementById('ped-nota').value.trim();
 
       const cliente = state.clientes.find((c) => c.id === clienteId);
       const repartidor = state.repartidores.find((r) => r.id === repartidorId);
 
-      if (!cliente || !repartidor || !cantidad || !precio) return;
+      if (!cliente || !repartidor) return;
 
-      state.pedidos.push({
-        id: Date.now(),
-        clienteId: cliente.id,
-        clienteNombre: cliente.nombre,
-        producto,
-        cantidad,
-        precio,
-        repartidorId: repartidor.id,
-        repartidorNombre: repartidor.nombre,
-        nota,
-        fecha: new Date().toISOString()
-      });
+      const entries = [];
+      const cubitoQty = Number(document.getElementById('ped-cant-cubito').value || 0);
+      const picadoQty = Number(document.getElementById('ped-cant-picado').value || 0);
+      const cubitoPrecio = Number(document.getElementById('ped-precio-cubito').value || 0);
+      const picadoPrecio = Number(document.getElementById('ped-precio-picado').value || 0);
 
+      if (cubitoQty > 0) {
+        entries.push({
+          id: Date.now() + 1,
+          clienteId: cliente.id,
+          clienteNombre: cliente.nombre,
+          producto: 'Hielo Cubito',
+          cantidad: cubitoQty,
+          precio: cubitoPrecio,
+          repartidorId: repartidor.id,
+          repartidorNombre: repartidor.nombre,
+          nota,
+          fecha: new Date().toISOString()
+        });
+      }
+
+      if (picadoQty > 0) {
+        entries.push({
+          id: Date.now() + 2,
+          clienteId: cliente.id,
+          clienteNombre: cliente.nombre,
+          producto: 'Hielo Picado',
+          cantidad: picadoQty,
+          precio: picadoPrecio,
+          repartidorId: repartidor.id,
+          repartidorNombre: repartidor.nombre,
+          nota,
+          fecha: new Date().toISOString()
+        });
+      }
+
+      if (!entries.length) return;
+
+      state.pedidos.push(...entries);
       saveState();
       renderPedidos();
       CerrarModalPedido();
