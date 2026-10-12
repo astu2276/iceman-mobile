@@ -67,6 +67,7 @@
         <div class="mb-3 leading-tight">
           <p><strong>CLI:</strong> <span id="fact-nom-cliente"></span></p>
           <p class="text-[11px] text-slate-500 mt-0.5"><strong>DIR:</strong> <span id="fact-dir-cliente"></span></p>
+          <p class="text-[11px] text-slate-500 mt-0.5"><strong>MAIL:</strong> <span id="fact-mail-cliente"></span></p>
         </div>
         <div id="fact-lineas" class="space-y-1.5 border-b border-dashed pb-3 mb-3"></div>
         <div class="text-right text-sm font-black text-slate-900">
@@ -120,6 +121,10 @@
         <input type="text" id="cliente-direccion" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
       </div>
       <div>
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Correo</label>
+        <input type="email" id="cliente-email" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+      </div>
+      <div>
         <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Teléfono</label>
         <input type="tel" id="cliente-telefono" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
       </div>
@@ -137,9 +142,13 @@
         <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Cliente</label>
         <select id="ped-cliente" required class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none h-11"></select>
       </div>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Producto</label>
+        <input type="text" id="ped-producto" value="Hielo Picado" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+      </div>
       <div class="grid grid-cols-2 gap-2">
         <div>
-          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Bolsas Cubitos</label>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Bolsas</label>
           <input type="number" id="ped-cant" min="1" value="5" required class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
         </div>
         <div>
@@ -168,16 +177,16 @@
     const defaultData = {
       empresa: 'HIELOS ICEMAN',
       clientes: [
-        { id: 1, nombre: 'Bar La Plaza', direccion: 'Calle Mayor 12', telefono: '600111222' },
-        { id: 2, nombre: 'Restaurante Sol', direccion: 'Av. del Río 45', telefono: '600333444' }
+        { id: 1, nombre: 'Bar La Plaza', direccion: 'Calle Mayor 12', email: 'barlaplaza@gmail.com', telefono: '600111222' },
+        { id: 2, nombre: 'Restaurante Sol', direccion: 'Av. del Río 45', email: 'restaurantesol@gmail.com', telefono: '600333444' }
       ],
       repartidores: [
         { id: 1, nombre: 'Luis', telefono: '611222333' },
         { id: 2, nombre: 'Marta', telefono: '622333444' }
       ],
       pedidos: [
-        { id: 1, clienteId: 1, clienteNombre: 'Bar La Plaza', cantidad: 8, precio: 2.5, repartidorId: 1, repartidorNombre: 'Luis', nota: 'Puerta lateral', fecha: new Date().toISOString() },
-        { id: 2, clienteId: 2, clienteNombre: 'Restaurante Sol', cantidad: 5, precio: 3.0, repartidorId: 2, repartidorNombre: 'Marta', nota: 'Entrega antes de las 14:00', fecha: new Date().toISOString() }
+        { id: 1, clienteId: 1, clienteNombre: 'Bar La Plaza', producto: 'Hielo Picado', cantidad: 8, precio: 2.5, repartidorId: 1, repartidorNombre: 'Luis', nota: 'Puerta lateral', fecha: new Date().toISOString() },
+        { id: 2, clienteId: 2, clienteNombre: 'Restaurante Sol', producto: 'Hielo Picado', cantidad: 5, precio: 3.0, repartidorId: 2, repartidorNombre: 'Marta', nota: 'Entrega antes de las 14:00', fecha: new Date().toISOString() }
       ]
     };
 
@@ -244,7 +253,10 @@
             </div>
             <button onclick="eliminarCliente(${cliente.id})" class="text-red-500 text-xs font-bold">✕</button>
           </div>
-          <div class="mt-2 text-[11px] text-slate-600">📞 ${cliente.telefono}</div>
+          <div class="mt-2 text-[11px] text-slate-600 flex flex-col gap-1">
+            <span>📞 ${cliente.telefono}</span>
+            <span>✉️ ${cliente.email || 'Sin correo'}</span>
+          </div>
         </div>
       `).join('');
     }
@@ -283,7 +295,7 @@
             <div class="flex justify-between items-start gap-2 mb-2">
               <div>
                 <p class="font-black text-slate-800">${pedido.clienteNombre}</p>
-                <p class="text-[11px] text-slate-500">${pedido.nota || 'Sin nota'}</p>
+                <p class="text-[11px] text-slate-500">${pedido.producto || 'Hielo Picado'} · ${pedido.nota || 'Sin nota'}</p>
               </div>
               <button onclick="eliminarPedido(${pedido.id})" class="text-red-500 text-xs font-bold">✕</button>
             </div>
@@ -321,11 +333,13 @@
       document.getElementById('modal-cliente').classList.add('hidden');
       document.getElementById('cliente-nombre').value = '';
       document.getElementById('cliente-direccion').value = '';
+      document.getElementById('cliente-email').value = '';
       document.getElementById('cliente-telefono').value = '';
     }
 
     function AbrirModalPedido() {
       renderSelects();
+      document.getElementById('ped-producto').value = 'Hielo Picado';
       document.getElementById('modal-pedido').classList.remove('hidden');
     }
 
@@ -333,6 +347,7 @@
       document.getElementById('modal-pedido').classList.add('hidden');
       document.getElementById('ped-cant').value = 5;
       document.getElementById('ped-precio').value = 2.5;
+      document.getElementById('ped-producto').value = 'Hielo Picado';
       document.getElementById('ped-nota').value = '';
     }
 
@@ -340,11 +355,12 @@
       event.preventDefault();
       const nombre = document.getElementById('cliente-nombre').value.trim();
       const direccion = document.getElementById('cliente-direccion').value.trim();
+      const email = document.getElementById('cliente-email').value.trim();
       const telefono = document.getElementById('cliente-telefono').value.trim();
 
       if (!nombre || !direccion || !telefono) return;
 
-      state.clientes.push({ id: Date.now(), nombre, direccion, telefono });
+      state.clientes.push({ id: Date.now(), nombre, direccion, email, telefono });
       saveState();
       renderClientes();
       renderSelects();
@@ -354,6 +370,7 @@
     function savePedido(event) {
       event.preventDefault();
       const clienteId = Number(document.getElementById('ped-cliente').value);
+      const producto = document.getElementById('ped-producto').value.trim() || 'Hielo Picado';
       const cantidad = Number(document.getElementById('ped-cant').value);
       const precio = Number(document.getElementById('ped-precio').value);
       const repartidorId = Number(document.getElementById('ped-repartidor').value);
@@ -368,6 +385,7 @@
         id: Date.now(),
         clienteId: cliente.id,
         clienteNombre: cliente.nombre,
+        producto,
         cantidad,
         precio,
         repartidorId: repartidor.id,
@@ -427,12 +445,14 @@
       const total = pedidosCliente.reduce((sum, p) => sum + (Number(p.cantidad || 0) * Number(p.precio || 0)), 0);
       document.getElementById('fact-nom-cliente').textContent = cliente.nombre;
       document.getElementById('fact-dir-cliente').textContent = cliente.direccion;
+      document.getElementById('fact-mail-cliente').textContent = cliente.email || 'Sin correo';
       document.getElementById('fact-fecha').textContent = new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       document.getElementById('fact-lineas').innerHTML = pedidosCliente.map((p) => {
         const subtotal = Number(p.cantidad || 0) * Number(p.precio || 0);
+        const nombreProducto = p.producto || 'Hielo Picado';
         return `
           <div class="flex justify-between gap-2">
-            <span>${p.cantidad}x ${p.repartidorNombre}</span>
+            <span>${p.cantidad}x ${nombreProducto}</span>
             <span>${formatMoney(subtotal)}€</span>
           </div>
         `;
