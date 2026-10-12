@@ -68,6 +68,8 @@
           <p><strong>CLI:</strong> <span id="fact-nom-cliente"></span></p>
           <p class="text-[11px] text-slate-500 mt-0.5"><strong>DIR:</strong> <span id="fact-dir-cliente"></span></p>
           <p class="text-[11px] text-slate-500 mt-0.5"><strong>MAIL:</strong> <span id="fact-mail-cliente"></span></p>
+          <p class="text-[11px] text-slate-500 mt-0.5"><strong>MAIL FACT:</strong> <span id="fact-mail-facturacion"></span></p>
+          <p class="text-[11px] text-slate-500 mt-0.5"><strong>CIF/NIF:</strong> <span id="fact-cif"></span></p>
         </div>
         <div id="fact-lineas" class="space-y-1.5 border-b border-dashed pb-3 mb-3"></div>
         <div class="text-right text-sm font-black text-slate-900">
@@ -86,6 +88,23 @@
             <input type="text" id="config-nombre-empresa" class="flex-1 border p-2 rounded-lg text-sm outline-none h-11 focus:border-sky-500" />
             <button onclick="cambiarNombreEmpresa()" class="bg-sky-600 text-white font-bold px-4 rounded-lg text-xs active:scale-95">OK</button>
           </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Datos Fiscales / Facturación</label>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="config-cif" placeholder="CIF / NIF" class="border p-2 rounded-lg text-sm outline-none h-11" />
+            <input type="email" id="config-email-fact" placeholder="Email facturación" class="border p-2 rounded-lg text-sm outline-none h-11" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Locales</label>
+          <div class="flex gap-2">
+            <button onclick="AbrirModalLocal()" class="flex-1 bg-sky-600 text-white font-bold py-2.5 rounded-lg text-xs">Crear Local</button>
+            <button onclick="renderLocales()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg text-xs">Ver Locales</button>
+          </div>
+          <div id="lista-locales" class="mt-3 space-y-2"></div>
         </div>
 
         <div class="border-t pt-3">
@@ -109,6 +128,7 @@
     </div>
   </nav>
 
+  <!-- Modal Cliente -->
   <div id="modal-cliente" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4" onclick="if(event.target === this) CerrarModalCliente()">
     <form onsubmit="saveCliente(event)" class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-xl space-y-3">
       <h3 class="font-bold text-base text-slate-800">Añadir Nuevo Cliente</h3>
@@ -135,6 +155,7 @@
     </form>
   </div>
 
+  <!-- Modal Pedido -->
   <div id="modal-pedido" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4" onclick="if(event.target === this) CerrarModalPedido()">
     <form onsubmit="savePedido(event)" class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-xl space-y-3">
       <h3 class="font-bold text-base text-slate-800">Crear Nuevo Pedido</h3>
@@ -180,8 +201,43 @@
     </form>
   </div>
 
+  <!-- Modal Local -->
+  <div id="modal-local" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4" onclick="if(event.target === this) CerrarModalLocal()">
+    <form onsubmit="saveLocal(event)" class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-xl space-y-3">
+      <h3 class="font-bold text-base text-slate-800">Crear Local / Punto</h3>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Nombre</label>
+        <input type="text" id="local-nombre" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Dirección Fiscal</label>
+        <input type="text" id="local-direccion" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <input type="text" id="local-categoria" placeholder="Categoría" class="border p-2 rounded-lg text-sm outline-none h-11" />
+        <input type="tel" id="local-telefono" placeholder="Teléfono" class="border p-2 rounded-lg text-sm outline-none h-11" />
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Notas internas</label>
+        <input type="text" id="local-notas" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Método de pago por defecto</label>
+        <select id="local-pago" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11">
+          <option value="efectivo">Efectivo</option>
+          <option value="tarjeta">Tarjeta</option>
+          <option value="transferencia">Transferencia</option>
+        </select>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="CerrarModalLocal()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-lg text-xs active:bg-slate-200">Cancelar</button>
+        <button type="submit" class="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-lg text-xs active:bg-emerald-700">Guardar Local</button>
+      </div>
+    </form>
+  </div>
+
   <script>
-    const APP_VERSION = '2026.10.12.2';
+    const APP_VERSION = '2026.10.12.3';
     const STORAGE_KEY = 'iceman-mobile-demo-v1';
 
     const deepClone = (value) => {
@@ -193,6 +249,11 @@
 
     const defaultData = {
       empresa: 'HIELOS ICEMAN',
+      cif: '',
+      emailFacturacion: '',
+      locales: [
+        { id: 1, nombre: 'Local Central', direccion: 'C/ Mayor 1', categoria: 'Almacén', telefono: '600111222', notas: 'Horario 9-18', pago: 'efectivo' }
+      ],
       clientes: [
         { id: 1, nombre: 'Bar La Plaza', direccion: 'Calle Mayor 12', email: 'barlaplaza@gmail.com', telefono: '600111222' },
         { id: 2, nombre: 'Restaurante Sol', direccion: 'Av. del Río 45', email: 'restaurantesol@gmail.com', telefono: '600333444' }
@@ -212,6 +273,9 @@
         throw new Error('invalid state object');
       }
       parsed.empresa = typeof parsed.empresa === 'string' ? parsed.empresa : defaultData.empresa;
+      parsed.cif = typeof parsed.cif === 'string' ? parsed.cif : '';
+      parsed.emailFacturacion = typeof parsed.emailFacturacion === 'string' ? parsed.emailFacturacion : '';
+      parsed.locales = Array.isArray(parsed.locales) ? parsed.locales : [];
       parsed.clientes = Array.isArray(parsed.clientes) ? parsed.clientes : [];
       parsed.repartidores = Array.isArray(parsed.repartidores) ? parsed.repartidores : [];
       parsed.pedidos = Array.isArray(parsed.pedidos) ? parsed.pedidos : [];
@@ -278,7 +342,33 @@
       const empresa = state.empresa || 'HIELOS ICEMAN';
       document.getElementById('app-title').textContent = empresa.toUpperCase();
       document.getElementById('config-nombre-empresa').value = empresa;
+      document.getElementById('config-cif').value = state.cif || '';
+      document.getElementById('config-email-fact').value = state.emailFacturacion || '';
       document.getElementById('fact-empresa-header').textContent = empresa.toUpperCase();
+    }
+
+    function renderLocales() {
+      const list = document.getElementById('lista-locales');
+      if (!state.locales || !state.locales.length) {
+        list.innerHTML = '<div class="text-sm text-slate-500">No hay locales creados.</div>';
+        return;
+      }
+      list.innerHTML = state.locales.map((l) => `
+        <div class="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="font-bold text-slate-800">${l.nombre}</p>
+              <p class="text-xs text-slate-500">${l.direccion || ''}</p>
+              <p class="text-xs text-slate-500">${l.categoria || ''} · ${l.telefono || ''}</p>
+            </div>
+            <div class="flex flex-col gap-2">
+              <button onclick="eliminarLocal(${l.id})" class="text-red-500 text-xs font-bold">Eliminar</button>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-600 mt-2">${l.notas || ''}</p>
+          <p class="text-[11px] text-slate-600 mt-2 font-mono">Pago: ${l.pago || 'efectivo'}</p>
+        </div>
+      `).join('');
     }
 
     function renderClientes() {
@@ -395,6 +485,17 @@
       document.getElementById('ped-nota').value = '';
     }
 
+    function AbrirModalLocal() { document.getElementById('modal-local').classList.remove('hidden'); }
+    function CerrarModalLocal() {
+      document.getElementById('modal-local').classList.add('hidden');
+      document.getElementById('local-nombre').value = '';
+      document.getElementById('local-direccion').value = '';
+      document.getElementById('local-categoria').value = '';
+      document.getElementById('local-telefono').value = '';
+      document.getElementById('local-notas').value = '';
+      document.getElementById('local-pago').value = 'efectivo';
+    }
+
     function saveCliente(event) {
       event.preventDefault();
       const nombre = document.getElementById('cliente-nombre').value.trim();
@@ -409,6 +510,24 @@
       renderClientes();
       renderSelects();
       CerrarModalCliente();
+    }
+
+    function saveLocal(event) {
+      event.preventDefault();
+      const nombre = document.getElementById('local-nombre').value.trim();
+      if (!nombre) return;
+      const direccion = document.getElementById('local-direccion').value.trim();
+      const categoria = document.getElementById('local-categoria').value.trim();
+      const telefono = document.getElementById('local-telefono').value.trim();
+      const notas = document.getElementById('local-notas').value.trim();
+      const pago = document.getElementById('local-pago').value;
+
+      const nuevo = { id: Date.now(), nombre, direccion, categoria, telefono, notas, pago };
+      state.locales = state.locales || [];
+      state.locales.push(nuevo);
+      saveState();
+      renderLocales();
+      CerrarModalLocal();
     }
 
     function savePedido(event) {
@@ -475,6 +594,12 @@
       renderSelects();
     }
 
+    function eliminarLocal(id) {
+      state.locales = (state.locales || []).filter((l) => l.id !== id);
+      saveState();
+      renderLocales();
+    }
+
     function eliminarRepartidor(id) {
       state.repartidores = state.repartidores.filter((r) => r.id !== id);
       state.pedidos = state.pedidos.filter((p) => p.repartidorId !== id);
@@ -494,6 +619,8 @@
       const input = document.getElementById('config-nombre-empresa');
       const nombre = input.value.trim() || 'HIELOS ICEMAN';
       state.empresa = nombre;
+      state.cif = document.getElementById('config-cif').value.trim();
+      state.emailFacturacion = document.getElementById('config-email-fact').value.trim();
       saveState();
       actualizarNombreEmpresaVisual();
     }
@@ -513,6 +640,8 @@
       document.getElementById('fact-nom-cliente').textContent = cliente.nombre;
       document.getElementById('fact-dir-cliente').textContent = cliente.direccion;
       document.getElementById('fact-mail-cliente').textContent = cliente.email || 'Sin correo';
+      document.getElementById('fact-mail-facturacion').textContent = state.emailFacturacion || 'Sin email facturación';
+      document.getElementById('fact-cif').textContent = state.cif || '';
       document.getElementById('fact-fecha').textContent = new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       document.getElementById('fact-lineas').innerHTML = pedidosCliente.map((p) => {
         const subtotal = Number(p.cantidad || 0) * Number(p.precio || 0);
@@ -551,6 +680,7 @@
       renderRepartidores();
       renderPedidos();
       renderSelects();
+      renderLocales();
       document.getElementById('vista-factura').classList.add('hidden');
     }
 
@@ -585,6 +715,7 @@
       renderRepartidores();
       renderPedidos();
       renderSelects();
+      renderLocales();
       actualizarEstadoOffline();
       window.addEventListener('online', actualizarEstadoOffline);
       window.addEventListener('offline', actualizarEstadoOffline);
