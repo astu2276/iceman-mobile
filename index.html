@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0284c7" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <title>ICEMAN Móvil</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html, body { overscroll-behavior-y: contain; }
+    body { -webkit-tap-highlight-color: transparent; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col pb-24 select-none">
+  <header class="bg-sky-700 text-white shadow-sm px-4 py-3 sticky top-0 z-50 flex justify-between items-center">
+    <div class="flex items-center space-x-1.5">
+      <span class="text-xl">🧊</span>
+      <h1 id="app-title" class="text-lg font-black tracking-tight uppercase">ICEMAN</h1>
+      <span class="bg-sky-600 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">MÓVIL</span>
+    </div>
+    <div id="offline-indicator" class="hidden bg-red-500 text-[10px] px-2 py-0.5 rounded font-bold animate-pulse">
+      OFFLINE
+    </div>
+  </header>
+
+  <main class="flex-1 p-4 max-w-md mx-auto w-full">
+    <section id="tab-pedidos" class="tab-content active">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-extrabold">📦 Repartos Hoy</h2>
+        <button onclick="AbrirModalPedido()" class="bg-sky-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-md active:scale-95">+ Nuevo</button>
+      </div>
+      <div id="lista-pedidos" class="space-y-3"></div>
+    </section>
+
+    <section id="tab-clientes" class="tab-content">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-extrabold">👥 Clientes</h2>
+        <button onclick="AbrirModalCliente()" class="bg-sky-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-md active:scale-95">+ Añadir</button>
+      </div>
+      <div id="lista-clientes" class="space-y-2"></div>
+    </section>
+
+    <section id="tab-repartidores" class="tab-content">
+      <h2 class="text-xl font-extrabold mb-4">🚚 Equipo / Chóferes</h2>
+      <div id="lista-repartidores" class="space-y-2"></div>
+    </section>
+
+    <section id="tab-facturacion" class="tab-content">
+      <h2 class="text-xl font-extrabold mb-3">🧾 Liquidación rápida</h2>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-4">
+        <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Seleccionar Cliente</label>
+        <select id="fact-cliente-sel" class="w-full border p-2.5 rounded-lg bg-slate-50 outline-none text-sm mb-3 h-11"></select>
+        <button onclick="generarBorradorFactura()" class="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-lg text-sm active:scale-[0.98] shadow-sm">Generar Borrador</button>
+      </div>
+
+      <div id="vista-factura" class="hidden p-4 rounded-xl border border-slate-200 bg-white font-mono text-xs text-slate-700 shadow-inner">
+        <div class="text-center border-b border-dashed pb-3 mb-3">
+          <h3 id="fact-empresa-header" class="font-bold text-sm uppercase">HIELOS ICEMAN</h3>
+          <p class="text-[10px] text-slate-400">Comprobante de Entrega</p>
+          <p id="fact-fecha" class="text-[10px]"></p>
+        </div>
+        <div class="mb-3 leading-tight">
+          <p><strong>CLI:</strong> <span id="fact-nom-cliente"></span></p>
+          <p class="text-[11px] text-slate-500 mt-0.5"><strong>DIR:</strong> <span id="fact-dir-cliente"></span></p>
+        </div>
+        <div id="fact-lineas" class="space-y-1.5 border-b border-dashed pb-3 mb-3"></div>
+        <div class="text-right text-sm font-black text-slate-900">
+          Total: <span id="fact-total-final">0.00</span>€
+        </div>
+        <button onclick="window.print()" class="mt-4 w-full bg-slate-800 text-white py-3 rounded-lg font-sans font-bold text-xs active:scale-[0.98]">🖨️ Imprimir Ticket</button>
+      </div>
+    </section>
+
+    <section id="tab-configuracion" class="tab-content">
+      <h2 class="text-xl font-extrabold mb-4">⚙️ Opciones</h2>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Nombre Empresa</label>
+          <div class="flex gap-2">
+            <input type="text" id="config-nombre-empresa" class="flex-1 border p-2 rounded-lg text-sm outline-none h-11 focus:border-sky-500" />
+            <button onclick="cambiarNombreEmpresa()" class="bg-sky-600 text-white font-bold px-4 rounded-lg text-xs active:scale-95">OK</button>
+          </div>
+        </div>
+
+        <div class="border-t pt-3">
+          <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Respaldo Local</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="exportarDatos()" class="bg-slate-700 text-white font-bold py-2.5 rounded-lg text-xs active:scale-95">Exportar JSON</button>
+            <button onclick="limpiarTodo()" class="bg-red-50 text-red-600 border border-red-100 font-bold py-2.5 rounded-lg text-xs active:scale-95">Reiniciar Demo</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_16px_rgba(15,23,42,0.08)] z-40">
+    <div class="max-w-md mx-auto grid grid-cols-5 gap-1 px-2 py-2">
+      <button class="tab-btn px-1 py-2 rounded-lg text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-pedidos">📦</button>
+      <button class="tab-btn px-1 py-2 rounded-lg text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-clientes">👥</button>
+      <button class="tab-btn px-1 py-2 rounded-lg text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-repartidores">🚚</button>
+      <button class="tab-btn px-1 py-2 rounded-lg text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-facturacion">🧾</button>
+      <button class="tab-btn px-1 py-2 rounded-lg text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-configuracion">⚙️</button>
+    </div>
+  </nav>
+
+  <div id="modal-cliente" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4" onclick="if(event.target === this) CerrarModalCliente()">
+    <form onsubmit="saveCliente(event)" class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-xl space-y-3">
+      <h3 class="font-bold text-base text-slate-800">Añadir Nuevo Cliente</h3>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Nombre Comercial</label>
+        <input type="text" id="cliente-nombre" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Dirección de Entrega</label>
+        <input type="text" id="cliente-direccion" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Teléfono</label>
+        <input type="tel" id="cliente-telefono" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="CerrarModalCliente()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-lg text-xs active:bg-slate-200">Cancelar</button>
+        <button type="submit" class="flex-1 bg-sky-600 text-white font-bold py-3 rounded-lg text-xs active:bg-sky-700">Guardar</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="modal-pedido" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4" onclick="if(event.target === this) CerrarModalPedido()">
+    <form onsubmit="savePedido(event)" class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-xl space-y-3">
+      <h3 class="font-bold text-base text-slate-800">Crear Nuevo Pedido</h3>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Cliente</label>
+        <select id="ped-cliente" required class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none h-11"></select>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Bolsas Cubitos</label>
+          <input type="number" id="ped-cant" min="1" value="5" required class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Precio (€)</label>
+          <input type="number" id="ped-precio" step="0.01" min="0" value="2.50" required class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Repartidor</label>
+        <select id="ped-repartidor" required class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none h-11"></select>
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Nota</label>
+        <input type="text" id="ped-nota" placeholder="Ej. Calle 3, puerta verde" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="CerrarModalPedido()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-lg text-xs active:bg-slate-200">Cancelar</button>
+        <button type="submit" class="flex-1 bg-sky-600 text-white font-bold py-3 rounded-lg text-xs active:bg-sky-700">Guardar</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'iceman-mobile-demo-v1';
+
+    const defaultData = {
+      empresa: 'HIELOS ICEMAN',
+      clientes: [
+        { id: 1, nombre: 'Bar La Plaza', direccion: 'Calle Mayor 12', telefono: '600111222' },
+        { id: 2, nombre: 'Restaurante Sol', direccion: 'Av. del Río 45', telefono: '600333444' }
+      ],
+      repartidores: [
+        { id: 1, nombre: 'Luis', telefono: '611222333' },
+        { id: 2, nombre: 'Marta', telefono: '622333444' }
+      ],
+      pedidos: [
+        { id: 1, clienteId: 1, clienteNombre: 'Bar La Plaza', cantidad: 8, precio: 2.5, repartidorId: 1, repartidorNombre: 'Luis', nota: 'Puerta lateral', fecha: new Date().toISOString() },
+        { id: 2, clienteId: 2, clienteNombre: 'Restaurante Sol', cantidad: 5, precio: 3.0, repartidorId: 2, repartidorNombre: 'Marta', nota: 'Entrega antes de las 14:00', fecha: new Date().toISOString() }
+      ]
+    };
+
+    let state = loadState();
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return structuredClone(defaultData);
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return structuredClone(defaultData);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function formatMoney(value) {
+      return Number(value || 0).toFixed(2);
+    }
+
+    function changeTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach((el) => {
+        const active = el.id === tabId;
+        el.classList.toggle('active', active);
+        el.classList.toggle('hidden', !active);
+      });
+
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        const active = btn.dataset.tab === tabId;
+        btn.classList.toggle('bg-sky-100', active);
+        btn.classList.toggle('text-sky-700', active);
+        btn.classList.toggle('font-black', active);
+        btn.classList.toggle('text-slate-600', !active);
+      });
+    }
+
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => changeTab(btn.dataset.tab));
+    });
+
+    function actualizarNombreEmpresaVisual() {
+      const empresa = state.empresa || 'HIELOS ICEMAN';
+      document.getElementById('app-title').textContent = empresa.toUpperCase();
+      document.getElementById('config-nombre-empresa').value = empresa;
+      document.getElementById('fact-empresa-header').textContent = empresa.toUpperCase();
+    }
+
+    function renderClientes() {
+      const lista = document.getElementById('lista-clientes');
+      if (!state.clientes.length) {
+        lista.innerHTML = '<div class="text-sm text-slate-500">No hay clientes aún.</div>';
+        return;
+      }
+
+      lista.innerHTML = state.clientes.map((cliente) => `
+        <div class="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+          <div class="flex justify-between items-start gap-2">
+            <div>
+              <p class="font-bold text-slate-800">${cliente.nombre}</p>
+              <p class="text-xs text-slate-500">${cliente.direccion}</p>
+            </div>
+            <button onclick="eliminarCliente(${cliente.id})" class="text-red-500 text-xs font-bold">✕</button>
+          </div>
+          <div class="mt-2 text-[11px] text-slate-600">📞 ${cliente.telefono}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderRepartidores() {
+      const lista = document.getElementById('lista-repartidores');
+      if (!state.repartidores.length) {
+        lista.innerHTML = '<div class="text-sm text-slate-500">No hay repartidores añadidos.</div>';
+        return;
+      }
+
+      lista.innerHTML = state.repartidores.map((rep) => `
+        <div class="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="font-bold text-slate-800">${rep.nombre}</p>
+              <p class="text-xs text-slate-500">📞 ${rep.telefono}</p>
+            </div>
+            <button onclick="eliminarRepartidor(${rep.id})" class="text-red-500 text-xs font-bold">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPedidos() {
+      const lista = document.getElementById('lista-pedidos');
+      if (!state.pedidos.length) {
+        lista.innerHTML = '<div class="text-sm text-slate-500">No hay pedidos para hoy.</div>';
+        return;
+      }
+
+      lista.innerHTML = state.pedidos.map((pedido) => {
+        const total = Number(pedido.cantidad || 0) * Number(pedido.precio || 0);
+        return `
+          <div class="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+            <div class="flex justify-between items-start gap-2 mb-2">
+              <div>
+                <p class="font-black text-slate-800">${pedido.clienteNombre}</p>
+                <p class="text-[11px] text-slate-500">${pedido.nota || 'Sin nota'}</p>
+              </div>
+              <button onclick="eliminarPedido(${pedido.id})" class="text-red-500 text-xs font-bold">✕</button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-[11px] text-slate-600">
+              <div class="bg-slate-50 rounded-lg p-2"><span class="block text-slate-400">Bolsas</span><strong>${pedido.cantidad}</strong></div>
+              <div class="bg-slate-50 rounded-lg p-2"><span class="block text-slate-400">Precio</span><strong>${formatMoney(pedido.precio)}€</strong></div>
+              <div class="bg-slate-50 rounded-lg p-2"><span class="block text-slate-400">Total</span><strong>${formatMoney(total)}€</strong></div>
+            </div>
+            <div class="mt-2 text-[11px] text-slate-500">🚚 ${pedido.repartidorNombre}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderSelects() {
+      const clienteSel = document.getElementById('ped-cliente');
+      const factSel = document.getElementById('fact-cliente-sel');
+
+      const optionsCliente = state.clientes.map((cliente) => `<option value="${cliente.id}">${cliente.nombre}</option>`).join('');
+      if (clienteSel) clienteSel.innerHTML = optionsCliente || '<option value="">No hay clientes</option>';
+      if (factSel) factSel.innerHTML = state.clientes.map((cliente) => `<option value="${cliente.id}">${cliente.nombre}</option>`).join('');
+
+      const repartidorSel = document.getElementById('ped-repartidor');
+      if (repartidorSel) {
+        repartidorSel.innerHTML = state.repartidores.map((rep) => `<option value="${rep.id}">${rep.nombre}</option>`).join('') || '<option value="">No hay repartidores</option>';
+      }
+
+      if (factSel && factSel.children.length > 0) {
+        factSel.value = factSel.children[0].value;
+      }
+    }
+
+    function AbrirModalCliente() { document.getElementById('modal-cliente').classList.remove('hidden'); }
+    function CerrarModalCliente() {
+      document.getElementById('modal-cliente').classList.add('hidden');
+      document.getElementById('cliente-nombre').value = '';
+      document.getElementById('cliente-direccion').value = '';
+      document.getElementById('cliente-telefono').value = '';
+    }
+
+    function AbrirModalPedido() {
+      renderSelects();
+      document.getElementById('modal-pedido').classList.remove('hidden');
+    }
+
+    function CerrarModalPedido() {
+      document.getElementById('modal-pedido').classList.add('hidden');
+      document.getElementById('ped-cant').value = 5;
+      document.getElementById('ped-precio').value = 2.5;
+      document.getElementById('ped-nota').value = '';
+    }
+
+    function saveCliente(event) {
+      event.preventDefault();
+      const nombre = document.getElementById('cliente-nombre').value.trim();
+      const direccion = document.getElementById('cliente-direccion').value.trim();
+      const telefono = document.getElementById('cliente-telefono').value.trim();
+
+      if (!nombre || !direccion || !telefono) return;
+
+      state.clientes.push({ id: Date.now(), nombre, direccion, telefono });
+      saveState();
+      renderClientes();
+      renderSelects();
+      CerrarModalCliente();
+    }
+
+    function savePedido(event) {
+      event.preventDefault();
+      const clienteId = Number(document.getElementById('ped-cliente').value);
+      const cantidad = Number(document.getElementById('ped-cant').value);
+      const precio = Number(document.getElementById('ped-precio').value);
+      const repartidorId = Number(document.getElementById('ped-repartidor').value);
+      const nota = document.getElementById('ped-nota').value.trim();
+
+      const cliente = state.clientes.find((c) => c.id === clienteId);
+      const repartidor = state.repartidores.find((r) => r.id === repartidorId);
+
+      if (!cliente || !repartidor || !cantidad || !precio) return;
+
+      state.pedidos.push({
+        id: Date.now(),
+        clienteId: cliente.id,
+        clienteNombre: cliente.nombre,
+        cantidad,
+        precio,
+        repartidorId: repartidor.id,
+        repartidorNombre: repartidor.nombre,
+        nota,
+        fecha: new Date().toISOString()
+      });
+
+      saveState();
+      renderPedidos();
+      CerrarModalPedido();
+    }
+
+    function eliminarCliente(id) {
+      state.clientes = state.clientes.filter((c) => c.id !== id);
+      state.pedidos = state.pedidos.filter((p) => p.clienteId !== id);
+      saveState();
+      renderClientes();
+      renderPedidos();
+      renderSelects();
+    }
+
+    function eliminarRepartidor(id) {
+      state.repartidores = state.repartidores.filter((r) => r.id !== id);
+      state.pedidos = state.pedidos.filter((p) => p.repartidorId !== id);
+      saveState();
+      renderRepartidores();
+      renderPedidos();
+      renderSelects();
+    }
+
+    function eliminarPedido(id) {
+      state.pedidos = state.pedidos.filter((p) => p.id !== id);
+      saveState();
+      renderPedidos();
+    }
+
+    function cambiarNombreEmpresa() {
+      const input = document.getElementById('config-nombre-empresa');
+      const nombre = input.value.trim() || 'HIELOS ICEMAN';
+      state.empresa = nombre;
+      saveState();
+      actualizarNombreEmpresaVisual();
+    }
+
+    function generarBorradorFactura() {
+      const clienteId = Number(document.getElementById('fact-cliente-sel').value);
+      const cliente = state.clientes.find((c) => c.id === clienteId);
+      if (!cliente) return;
+
+      const pedidosCliente = state.pedidos.filter((p) => p.clienteId === clienteId);
+      if (!pedidosCliente.length) {
+        alert('Este cliente no tiene pedidos en este momento.');
+        return;
+      }
+
+      const total = pedidosCliente.reduce((sum, p) => sum + (Number(p.cantidad || 0) * Number(p.precio || 0)), 0);
+      document.getElementById('fact-nom-cliente').textContent = cliente.nombre;
+      document.getElementById('fact-dir-cliente').textContent = cliente.direccion;
+      document.getElementById('fact-fecha').textContent = new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      document.getElementById('fact-lineas').innerHTML = pedidosCliente.map((p) => {
+        const subtotal = Number(p.cantidad || 0) * Number(p.precio || 0);
+        return `
+          <div class="flex justify-between gap-2">
+            <span>${p.cantidad}x ${p.repartidorNombre}</span>
+            <span>${formatMoney(subtotal)}€</span>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('fact-total-final').textContent = formatMoney(total);
+      document.getElementById('vista-factura').classList.remove('hidden');
+    }
+
+    function exportarDatos() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'iceman-backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function limpiarTodo() {
+      const confirmar = confirm('¿Seguro que quieres reiniciar la demo? Se perderán todos los datos locales.');
+      if (!confirmar) return;
+
+      localStorage.removeItem(STORAGE_KEY);
+      state = structuredClone(defaultData);
+      saveState();
+      actualizarNombreEmpresaVisual();
+      renderClientes();
+      renderRepartidores();
+      renderPedidos();
+      renderSelects();
+      document.getElementById('vista-factura').classList.add('hidden');
+    }
+
+    function actualizarEstadoOffline() {
+      const indicator = document.getElementById('offline-indicator');
+      if (navigator.onLine) {
+        indicator.classList.add('hidden');
+      } else {
+        indicator.classList.remove('hidden');
+      }
+    }
+
+    function init() {
+      actualizarNombreEmpresaVisual();
+      renderClientes();
+      renderRepartidores();
+      renderPedidos();
+      renderSelects();
+      actualizarEstadoOffline();
+      window.addEventListener('online', actualizarEstadoOffline);
+      window.addEventListener('offline', actualizarEstadoOffline);
+      changeTab('tab-pedidos');
+    }
+
+    init();
+  </script>
+</body>
+</html>
