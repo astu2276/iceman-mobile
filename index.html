@@ -3,35 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#0284c7" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <title>ICEMAN Móvil</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     html, body { overscroll-behavior-y: contain; }
-    body { -webkit-tap-highlight-color: transparent; }
+    body { -webkit-tap-highlight-color: transparent; font-family: Inter, Arial, sans-serif; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .glass { backdrop-filter: blur(12px); }
+    .soft-card { background: linear-gradient(180deg, rgba(255,255,255,1), rgba(248,250,252,1)); }
+    .scroll-x { overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none; }
+    .scroll-x::-webkit-scrollbar { display: none; }
+    .input-soft { @apply border border-slate-200 bg-slate-50 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-sky-500; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col pb-24 select-none">
-  <header class="bg-sky-700 text-white shadow-sm px-4 py-3 sticky top-0 z-50 flex justify-between items-center">
-    <div class="flex items-center space-x-1.5">
-      <span class="text-xl">🧊</span>
-      <h1 id="app-title" class="text-lg font-black tracking-tight uppercase">ICEMAN</h1>
-      <span class="bg-sky-600 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">MÓVIL</span>
-    </div>
-    <div id="offline-indicator" class="hidden bg-red-500 text-[10px] px-2 py-0.5 rounded font-bold animate-pulse">
-      OFFLINE
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col pb-24 select-none">
+  <header class="bg-slate-900 text-white shadow-lg px-4 py-3 sticky top-0 z-50">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-lg">🧊</div>
+        <div>
+          <div class="text-[10px] uppercase tracking-[0.22em] text-sky-200">ICEMAN</div>
+          <h1 id="app-title" class="text-base font-black uppercase tracking-tight">HIELOS ICEMAN</h1>
+        </div>
+      </div>
+      <div id="offline-indicator" class="hidden bg-red-500 text-[9px] px-2 py-1 rounded-full font-bold animate-pulse">OFFLINE</div>
     </div>
   </header>
 
   <main class="flex-1 p-4 max-w-md mx-auto w-full">
-    <section id="tab-pedidos" class="tab-content active">
+    <section id="tab-dashboard" class="tab-content active">
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="soft-card rounded-2xl p-3 shadow-sm border border-slate-200">
+          <div class="text-[10px] uppercase tracking-[0.18em] text-slate-400">Pedidos</div>
+          <div id="kpi-pedidos" class="mt-2 text-2xl font-black text-slate-900">0</div>
+        </div>
+        <div class="soft-card rounded-2xl p-3 shadow-sm border border-slate-200">
+          <div class="text-[10px] uppercase tracking-[0.18em] text-slate-400">Clientes</div>
+          <div id="kpi-clientes" class="mt-2 text-2xl font-black text-slate-900">0</div>
+        </div>
+        <div class="soft-card rounded-2xl p-3 shadow-sm border border-slate-200">
+          <div class="text-[10px] uppercase tracking-[0.18em] text-slate-400">Repartidores</div>
+          <div id="kpi-repartidores" class="mt-2 text-2xl font-black text-slate-900">0</div>
+        </div>
+        <div class="soft-card rounded-2xl p-3 shadow-sm border border-slate-200">
+          <div class="text-[10px] uppercase tracking-[0.18em] text-slate-400">Total</div>
+          <div id="kpi-total" class="mt-2 text-2xl font-black text-emerald-600">0.00€</div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 mb-4">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-black text-slate-800">Resumen del día</h2>
+          <button onclick="AbrirModalPedido()" class="bg-sky-600 text-white text-[11px] font-bold px-3 py-2 rounded-xl shadow-sm active:scale-95">+ Nuevo pedido</button>
+        </div>
+        <div id="resumen-hoy" class="space-y-2 text-sm text-slate-600"></div>
+      </div>
+    </section>
+
+    <section id="tab-pedidos" class="tab-content">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-extrabold">📦 Repartos Hoy</h2>
+        <h2 class="text-xl font-extrabold">📦 Repartos</h2>
         <button onclick="AbrirModalPedido()" class="bg-sky-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-md active:scale-95">+ Nuevo</button>
       </div>
       <div id="lista-pedidos" class="space-y-3"></div>
@@ -46,22 +82,22 @@
     </section>
 
     <section id="tab-repartidores" class="tab-content">
-      <h2 class="text-xl font-extrabold mb-4">🚚 Equipo / Chóferes</h2>
+      <h2 class="text-xl font-extrabold mb-4">🚚 Equipo</h2>
       <div id="lista-repartidores" class="space-y-2"></div>
     </section>
 
     <section id="tab-facturacion" class="tab-content">
-      <h2 class="text-xl font-extrabold mb-3">🧾 Liquidación rápida</h2>
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-4">
-        <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Seleccionar Cliente</label>
-        <select id="fact-cliente-sel" class="w-full border p-2.5 rounded-lg bg-slate-50 outline-none text-sm mb-3 h-11"></select>
-        <button onclick="generarBorradorFactura()" class="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-lg text-sm active:scale-[0.98] shadow-sm">Generar Borrador</button>
+      <h2 class="text-xl font-extrabold mb-3">🧾 Facturación</h2>
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-4">
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Seleccionar cliente</label>
+        <select id="fact-cliente-sel" class="w-full border border-slate-200 p-2.5 rounded-xl bg-slate-50 outline-none text-sm mb-3 h-11"></select>
+        <button onclick="generarBorradorFactura()" class="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-sm active:scale-[0.98] shadow-sm">Generar borrador</button>
       </div>
 
-      <div id="vista-factura" class="hidden p-4 rounded-xl border border-slate-200 bg-white font-mono text-xs text-slate-700 shadow-inner">
+      <div id="vista-factura" class="hidden p-4 rounded-2xl border border-slate-200 bg-white font-mono text-xs text-slate-700 shadow-inner">
         <div class="text-center border-b border-dashed pb-3 mb-3">
           <h3 id="fact-empresa-header" class="font-bold text-sm uppercase">HIELOS ICEMAN</h3>
-          <p class="text-[10px] text-slate-400">Comprobante de Entrega</p>
+          <p class="text-[10px] text-slate-400">Comprobante de entrega</p>
           <p id="fact-fecha" class="text-[10px]"></p>
         </div>
         <div class="mb-3 leading-tight">
@@ -75,43 +111,44 @@
         <div class="text-right text-sm font-black text-slate-900">
           Total: <span id="fact-total-final">0.00</span>€
         </div>
-        <button onclick="window.print()" class="mt-4 w-full bg-slate-800 text-white py-3 rounded-lg font-sans font-bold text-xs active:scale-[0.98]">🖨️ Imprimir Ticket</button>
+        <button onclick="window.print()" class="mt-4 w-full bg-slate-800 text-white py-3 rounded-xl font-sans font-bold text-xs active:scale-[0.98]">🖨️ Imprimir ticket</button>
       </div>
     </section>
 
     <section id="tab-configuracion" class="tab-content">
-      <h2 class="text-xl font-extrabold mb-4">⚙️ Opciones</h2>
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 space-y-4">
+      <h2 class="text-xl font-extrabold mb-4">⚙️ Configuración</h2>
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-4">
         <div>
-          <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Nombre Empresa</label>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Nombre de la empresa</label>
           <div class="flex gap-2">
-            <input type="text" id="config-nombre-empresa" class="flex-1 border p-2 rounded-lg text-sm outline-none h-11 focus:border-sky-500" />
-            <button onclick="cambiarNombreEmpresa()" class="bg-sky-600 text-white font-bold px-4 rounded-lg text-xs active:scale-95">OK</button>
+            <input id="config-nombre-empresa" type="text" class="flex-1 border border-slate-200 bg-slate-50 rounded-xl px-3 py-2.5 text-sm outline-none h-11 focus:border-sky-500" />
+            <button onclick="cambiarNombreEmpresa()" class="bg-sky-600 text-white font-bold px-4 rounded-xl text-xs active:scale-95">Guardar</button>
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Datos Fiscales / Facturación</label>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Datos fiscales</label>
           <div class="grid grid-cols-2 gap-2">
-            <input type="text" id="config-cif" placeholder="CIF / NIF" class="border p-2 rounded-lg text-sm outline-none h-11" />
-            <input type="email" id="config-email-fact" placeholder="Email facturación" class="border p-2 rounded-lg text-sm outline-none h-11" />
+            <input id="config-cif" type="text" placeholder="CIF / NIF" class="border border-slate-200 bg-slate-50 rounded-xl px-3 py-2.5 text-sm outline-none h-11" />
+            <input id="config-email-fact" type="email" placeholder="Email facturación" class="border border-slate-200 bg-slate-50 rounded-xl px-3 py-2.5 text-sm outline-none h-11" />
           </div>
+          <button onclick="guardarDatosFiscales()" class="mt-3 w-full bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95">Guardar datos fiscales</button>
         </div>
 
         <div>
-          <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Locales</label>
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Local / punto de venta</label>
           <div class="flex gap-2">
-            <button onclick="AbrirModalLocal()" class="flex-1 bg-sky-600 text-white font-bold py-2.5 rounded-lg text-xs">Crear Local</button>
-            <button onclick="renderLocales()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg text-xs">Ver Locales</button>
+            <button onclick="AbrirModalLocal()" class="flex-1 bg-sky-600 text-white font-bold py-2.5 rounded-xl text-xs">Crear local</button>
+            <button onclick="renderLocales()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs">Ver locales</button>
           </div>
           <div id="lista-locales" class="mt-3 space-y-2"></div>
         </div>
 
-        <div class="border-t pt-3">
-          <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Respaldo Local</label>
+        <div class="border-t border-dashed pt-3">
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Respaldo</label>
           <div class="grid grid-cols-2 gap-2">
-            <button onclick="exportarDatos()" class="bg-slate-700 text-white font-bold py-2.5 rounded-lg text-xs active:scale-95">Exportar JSON</button>
-            <button onclick="limpiarTodo()" class="bg-red-50 text-red-600 border border-red-100 font-bold py-2.5 rounded-lg text-xs active:scale-95">Reiniciar Demo</button>
+            <button onclick="exportarDatos()" class="bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95">Exportar JSON</button>
+            <button onclick="limpiarTodo()" class="bg-red-50 text-red-600 border border-red-100 font-bold py-2.5 rounded-xl text-xs active:scale-95">Reiniciar demo</button>
           </div>
         </div>
       </div>
@@ -120,139 +157,126 @@
 
   <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_16px_rgba(15,23,42,0.08)] z-40">
     <div class="max-w-md mx-auto grid grid-cols-5 gap-1 px-2 py-2">
-      <button class="tab-btn px-1 py-2 rounded-lg text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-pedidos">📦</button>
-      <button class="tab-btn px-1 py-2 rounded-lg text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-clientes">👥</button>
-      <button class="tab-btn px-1 py-2 rounded-lg text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-repartidores">🚚</button>
-      <button class="tab-btn px-1 py-2 rounded-lg text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-facturacion">🧾</button>
-      <button class="tab-btn px-1 py-2 rounded-lg text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-configuracion">⚙️</button>
+      <button class="tab-btn px-1 py-2 rounded-xl text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-dashboard">📊</button>
+      <button class="tab-btn px-1 py-2 rounded-xl text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-pedidos">📦</button>
+      <button class="tab-btn px-1 py-2 rounded-xl text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-clientes">👥</button>
+      <button class="tab-btn px-1 py-2 rounded-xl text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-facturacion">🧾</button>
+      <button class="tab-btn px-1 py-2 rounded-xl text-[10px] font-bold text-slate-600 active:scale-95" data-tab="tab-configuracion">⚙️</button>
     </div>
   </nav>
 
-  <!-- Modal Cliente -->
   <div id="modal-cliente" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4" onclick="if(event.target === this) CerrarModalCliente()">
     <form onsubmit="saveCliente(event)" class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-xl space-y-3">
-      <h3 class="font-bold text-base text-slate-800">Añadir Nuevo Cliente</h3>
+      <h3 class="font-bold text-base text-slate-800">Añadir cliente</h3>
       <div>
-        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Nombre Comercial</label>
-        <input type="text" id="cliente-nombre" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Nombre</label>
+        <input id="cliente-nombre" type="text" required class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none focus:border-sky-500 h-11" />
       </div>
       <div>
-        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Dirección de Entrega</label>
-        <input type="text" id="cliente-direccion" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Dirección</label>
+        <input id="cliente-direccion" type="text" required class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none focus:border-sky-500 h-11" />
       </div>
       <div>
         <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Correo</label>
-        <input type="email" id="cliente-email" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+        <input id="cliente-email" type="email" class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none focus:border-sky-500 h-11" />
       </div>
       <div>
         <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Teléfono</label>
-        <input type="tel" id="cliente-telefono" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+        <input id="cliente-telefono" type="tel" required class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none focus:border-sky-500 h-11" />
       </div>
       <div class="flex gap-2 pt-2">
-        <button type="button" onclick="CerrarModalCliente()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-lg text-xs active:bg-slate-200">Cancelar</button>
-        <button type="submit" class="flex-1 bg-sky-600 text-white font-bold py-3 rounded-lg text-xs active:bg-sky-700">Guardar</button>
+        <button type="button" onclick="CerrarModalCliente()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl text-xs active:bg-slate-200">Cancelar</button>
+        <button type="submit" class="flex-1 bg-sky-600 text-white font-bold py-3 rounded-xl text-xs active:bg-sky-700">Guardar</button>
       </div>
     </form>
   </div>
 
-  <!-- Modal Pedido -->
   <div id="modal-pedido" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4" onclick="if(event.target === this) CerrarModalPedido()">
     <form onsubmit="savePedido(event)" class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-xl space-y-3">
-      <h3 class="font-bold text-base text-slate-800">Crear Nuevo Pedido</h3>
+      <h3 class="font-bold text-base text-slate-800">Nuevo pedido</h3>
       <div>
         <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Cliente</label>
-        <select id="ped-cliente" required class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none h-11"></select>
+        <select id="ped-cliente" required class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none h-11"></select>
       </div>
-
       <div class="grid grid-cols-2 gap-2">
         <div>
-          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Hielo Cubito</label>
-          <input type="number" id="ped-cant-cubito" min="0" value="0" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Cubito</label>
+          <input id="ped-cant-cubito" type="number" min="0" value="0" class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none h-11" />
         </div>
         <div>
-          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Hielo Picado</label>
-          <input type="number" id="ped-cant-picado" min="0" value="0" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Picado</label>
+          <input id="ped-cant-picado" type="number" min="0" value="0" class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none h-11" />
         </div>
       </div>
-
       <div class="grid grid-cols-2 gap-2">
         <div>
-          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Precio Cubito (€)</label>
-          <input type="number" id="ped-precio-cubito" step="0.01" min="0" value="2.50" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">€ Cubito</label>
+          <input id="ped-precio-cubito" type="number" min="0" step="0.01" value="2.50" class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none h-11" />
         </div>
         <div>
-          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Precio Picado (€)</label>
-          <input type="number" id="ped-precio-picado" step="0.01" min="0" value="3.00" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+          <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">€ Picado</label>
+          <input id="ped-precio-picado" type="number" min="0" step="0.01" value="3.00" class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none h-11" />
         </div>
       </div>
-
       <div>
         <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Repartidor</label>
-        <select id="ped-repartidor" required class="w-full border p-2.5 rounded-lg text-sm bg-slate-50 outline-none h-11"></select>
+        <select id="ped-repartidor" required class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none h-11"></select>
       </div>
       <div>
         <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Nota</label>
-        <input type="text" id="ped-nota" placeholder="Ej. Calle 3, puerta verde" class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+        <input id="ped-nota" type="text" placeholder="Ej. Calle 3, puerta verde" class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none h-11" />
       </div>
       <div class="flex gap-2 pt-2">
-        <button type="button" onclick="CerrarModalPedido()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-lg text-xs active:bg-slate-200">Cancelar</button>
-        <button type="submit" class="flex-1 bg-sky-600 text-white font-bold py-3 rounded-lg text-xs active:bg-sky-700">Guardar</button>
+        <button type="button" onclick="CerrarModalPedido()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl text-xs active:bg-slate-200">Cancelar</button>
+        <button type="submit" class="flex-1 bg-sky-600 text-white font-bold py-3 rounded-xl text-xs active:bg-sky-700">Guardar</button>
       </div>
     </form>
   </div>
 
-  <!-- Modal Local -->
   <div id="modal-local" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4" onclick="if(event.target === this) CerrarModalLocal()">
     <form onsubmit="saveLocal(event)" class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 shadow-xl space-y-3">
-      <h3 class="font-bold text-base text-slate-800">Crear Local / Punto</h3>
+      <h3 class="font-bold text-base text-slate-800">Crear local</h3>
       <div>
         <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Nombre</label>
-        <input type="text" id="local-nombre" required class="w-full border p-2.5 rounded-lg text-sm outline-none focus:border-sky-500 h-11" />
+        <input id="local-nombre" type="text" required class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none focus:border-sky-500 h-11" />
       </div>
       <div>
-        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Dirección Fiscal</label>
-        <input type="text" id="local-direccion" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Dirección fiscal</label>
+        <input id="local-direccion" type="text" class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none h-11" />
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <input type="text" id="local-categoria" placeholder="Categoría" class="border p-2 rounded-lg text-sm outline-none h-11" />
-        <input type="tel" id="local-telefono" placeholder="Teléfono" class="border p-2 rounded-lg text-sm outline-none h-11" />
+        <input id="local-categoria" type="text" placeholder="Categoría" class="border border-slate-200 bg-slate-50 rounded-xl px-3 py-2.5 text-sm outline-none h-11" />
+        <input id="local-telefono" type="tel" placeholder="Teléfono" class="border border-slate-200 bg-slate-50 rounded-xl px-3 py-2.5 text-sm outline-none h-11" />
       </div>
       <div>
         <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Notas internas</label>
-        <input type="text" id="local-notas" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11" />
+        <input id="local-notas" type="text" class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none h-11" />
       </div>
       <div>
-        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Método de pago por defecto</label>
-        <select id="local-pago" class="w-full border p-2.5 rounded-lg text-sm outline-none h-11">
+        <label class="block text-[10px] font-bold uppercase text-slate-400 mb-0.5">Método de pago</label>
+        <select id="local-pago" class="w-full border border-slate-200 bg-slate-50 p-2.5 rounded-xl text-sm outline-none h-11">
           <option value="efectivo">Efectivo</option>
           <option value="tarjeta">Tarjeta</option>
           <option value="transferencia">Transferencia</option>
         </select>
       </div>
       <div class="flex gap-2 pt-2">
-        <button type="button" onclick="CerrarModalLocal()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-lg text-xs active:bg-slate-200">Cancelar</button>
-        <button type="submit" class="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-lg text-xs active:bg-emerald-700">Guardar Local</button>
+        <button type="button" onclick="CerrarModalLocal()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl text-xs active:bg-slate-200">Cancelar</button>
+        <button type="submit" class="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-xl text-xs active:bg-emerald-700">Guardar</button>
       </div>
     </form>
   </div>
 
   <script>
-    const APP_VERSION = '2026.10.12.3';
+    const APP_VERSION = '2026.10.12.4';
     const STORAGE_KEY = 'iceman-mobile-demo-v1';
-
-    const deepClone = (value) => {
-      if (typeof structuredClone === 'function') {
-        return structuredClone(value);
-      }
-      return JSON.parse(JSON.stringify(value));
-    };
 
     const defaultData = {
       empresa: 'HIELOS ICEMAN',
       cif: '',
       emailFacturacion: '',
       locales: [
-        { id: 1, nombre: 'Local Central', direccion: 'C/ Mayor 1', categoria: 'Almacén', telefono: '600111222', notas: 'Horario 9-18', pago: 'efectivo' }
+        { id: 1, nombre: 'Local Central', direccion: 'Calle Mayor, 1', categoria: 'Distribución', telefono: '600111222', notas: 'Horario 9-18', pago: 'efectivo' }
       ],
       clientes: [
         { id: 1, nombre: 'Bar La Plaza', direccion: 'Calle Mayor 12', email: 'barlaplaza@gmail.com', telefono: '600111222' },
@@ -263,15 +287,20 @@
         { id: 2, nombre: 'Marta', telefono: '622333444' }
       ],
       pedidos: [
-        { id: 1, clienteId: 1, clienteNombre: 'Bar La Plaza', producto: 'Hielo Picado', cantidad: 8, precio: 2.5, repartidorId: 1, repartidorNombre: 'Luis', nota: 'Puerta lateral', fecha: new Date().toISOString() },
-        { id: 2, clienteId: 2, clienteNombre: 'Restaurante Sol', producto: 'Hielo Picado', cantidad: 5, precio: 3.0, repartidorId: 2, repartidorNombre: 'Marta', nota: 'Entrega antes de las 14:00', fecha: new Date().toISOString() }
+        { id: 1, clienteId: 1, clienteNombre: 'Bar La Plaza', producto: 'Hielo Picado', cantidad: 8, precio: 2.50, repartidorId: 1, repartidorNombre: 'Luis', nota: 'Puerta lateral', fecha: new Date().toISOString() },
+        { id: 2, clienteId: 2, clienteNombre: 'Restaurante Sol', producto: 'Hielo Picado', cantidad: 5, precio: 3.00, repartidorId: 2, repartidorNombre: 'Marta', nota: 'Entrega antes de las 14:00', fecha: new Date().toISOString() }
       ]
     };
 
+    const moneyFmt = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    function deepClone(value) {
+      if (typeof structuredClone === 'function') return structuredClone(value);
+      return JSON.parse(JSON.stringify(value));
+    }
+
     function sanitizeState(parsed) {
-      if (!parsed || typeof parsed !== 'object') {
-        throw new Error('invalid state object');
-      }
+      if (!parsed || typeof parsed !== 'object') throw new Error('invalid state');
       parsed.empresa = typeof parsed.empresa === 'string' ? parsed.empresa : defaultData.empresa;
       parsed.cif = typeof parsed.cif === 'string' ? parsed.cif : '';
       parsed.emailFacturacion = typeof parsed.emailFacturacion === 'string' ? parsed.emailFacturacion : '';
@@ -283,17 +312,14 @@
     }
 
     function resetStateToDefault(message) {
-      const backupKey = STORAGE_KEY + '-corrupt-' + Date.now();
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        try { localStorage.setItem(backupKey, raw); } catch (e) {}
-      }
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) localStorage.setItem(STORAGE_KEY + '-bkp-' + Date.now(), raw);
+      } catch (e) {}
       localStorage.removeItem(STORAGE_KEY);
       const fixed = deepClone(defaultData);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(fixed));
-      if (message) {
-        console.warn(message);
-      }
+      if (message) console.warn(message);
       return fixed;
     }
 
@@ -301,10 +327,9 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return deepClone(defaultData);
       try {
-        const parsed = JSON.parse(raw);
-        return sanitizeState(parsed);
+        return sanitizeState(JSON.parse(raw));
       } catch (error) {
-        return resetStateToDefault('Estado corrupto; se ha restaurado la demo por defecto');
+        return resetStateToDefault('Estado corrupto; se restauró la demo por defecto.');
       }
     }
 
@@ -315,36 +340,55 @@
     }
 
     function formatMoney(value) {
-      return Number(value || 0).toFixed(2);
+      return moneyFmt.format(Number(value || 0));
     }
 
-    function changeTab(tabId) {
+    function setActiveTab(tabId) {
       document.querySelectorAll('.tab-content').forEach((el) => {
-        const active = el.id === tabId;
-        el.classList.toggle('active', active);
-        el.classList.toggle('hidden', !active);
+        const isActive = el.id === tabId;
+        el.classList.toggle('active', isActive);
       });
 
       document.querySelectorAll('.tab-btn').forEach((btn) => {
-        const active = btn.dataset.tab === tabId;
-        btn.classList.toggle('bg-sky-100', active);
-        btn.classList.toggle('text-sky-700', active);
-        btn.classList.toggle('font-black', active);
-        btn.classList.toggle('text-slate-600', !active);
+        const isActive = btn.dataset.tab === tabId;
+        btn.classList.toggle('bg-sky-100', isActive);
+        btn.classList.toggle('text-sky-700', isActive);
+        btn.classList.toggle('font-black', isActive);
+        btn.classList.toggle('text-slate-600', !isActive);
       });
     }
 
     document.querySelectorAll('.tab-btn').forEach((btn) => {
-      btn.addEventListener('click', () => changeTab(btn.dataset.tab));
+      btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
     });
 
-    function actualizarNombreEmpresaVisual() {
-      const empresa = state.empresa || 'HIELOS ICEMAN';
-      document.getElementById('app-title').textContent = empresa.toUpperCase();
-      document.getElementById('config-nombre-empresa').value = empresa;
-      document.getElementById('config-cif').value = state.cif || '';
-      document.getElementById('config-email-fact').value = state.emailFacturacion || '';
-      document.getElementById('fact-empresa-header').textContent = empresa.toUpperCase();
+    function renderKPIs() {
+      const totalPedidos = state.pedidos.length;
+      const totalClientes = state.clientes.length;
+      const totalRepartidores = state.repartidores.length;
+      const totalImporte = state.pedidos.reduce((sum, p) => sum + Number(p.cantidad || 0) * Number(p.precio || 0), 0);
+
+      document.getElementById('kpi-pedidos').textContent = String(totalPedidos);
+      document.getElementById('kpi-clientes').textContent = String(totalClientes);
+      document.getElementById('kpi-repartidores').textContent = String(totalRepartidores);
+      document.getElementById('kpi-total').textContent = `${formatMoney(totalImporte)}€`;
+    }
+
+    function renderResumenHoy() {
+      const box = document.getElementById('resumen-hoy');
+      const totalPedidos = state.pedidos.length;
+      const totalImporte = state.pedidos.reduce((sum, p) => sum + Number(p.cantidad || 0) * Number(p.precio || 0), 0);
+      const topCliente = [...state.pedidos].reduce((acc, p) => {
+        acc[p.clienteNombre] = (acc[p.clienteNombre] || 0) + Number(p.cantidad || 0);
+        return acc;
+      }, {});
+      const clienteMasActivo = Object.entries(topCliente).sort((a, b) => b[1] - a[1])[0];
+
+      box.innerHTML = `
+        <div class="flex justify-between items-center"><span>Número de entregas</span><strong class="text-slate-800">${totalPedidos}</strong></div>
+        <div class="flex justify-between items-center"><span>Importe estimado</span><strong class="text-slate-800">${formatMoney(totalImporte)}€</strong></div>
+        <div class="flex justify-between items-center"><span>Cliente más activo</span><strong class="text-slate-800">${clienteMasActivo ? clienteMasActivo[0] : 'Sin datos'}</strong></div>
+      `;
     }
 
     function renderLocales() {
@@ -353,20 +397,19 @@
         list.innerHTML = '<div class="text-sm text-slate-500">No hay locales creados.</div>';
         return;
       }
+
       list.innerHTML = state.locales.map((l) => `
-        <div class="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
-          <div class="flex justify-between items-start">
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-200">
+          <div class="flex justify-between items-start gap-2">
             <div>
               <p class="font-bold text-slate-800">${l.nombre}</p>
-              <p class="text-xs text-slate-500">${l.direccion || ''}</p>
-              <p class="text-xs text-slate-500">${l.categoria || ''} · ${l.telefono || ''}</p>
+              <p class="text-xs text-slate-500">${l.direccion || 'Sin dirección'}</p>
+              <p class="text-xs text-slate-500">${l.categoria || 'Sin categoría'} · ${l.telefono || 'Sin teléfono'}</p>
             </div>
-            <div class="flex flex-col gap-2">
-              <button onclick="eliminarLocal(${l.id})" class="text-red-500 text-xs font-bold">Eliminar</button>
-            </div>
+            <button onclick="eliminarLocal(${l.id})" class="text-red-500 text-xs font-bold">Eliminar</button>
           </div>
-          <p class="text-[11px] text-slate-600 mt-2">${l.notas || ''}</p>
-          <p class="text-[11px] text-slate-600 mt-2 font-mono">Pago: ${l.pago || 'efectivo'}</p>
+          <p class="text-[11px] text-slate-600 mt-2">${l.notas || 'Sin notas'}</p>
+          <p class="text-[11px] font-mono text-slate-600 mt-1">Pago: ${l.pago || 'efectivo'}</p>
         </div>
       `).join('');
     }
@@ -379,10 +422,10 @@
       }
 
       lista.innerHTML = state.clientes.map((cliente) => `
-        <div class="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+        <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
           <div class="flex justify-between items-start gap-2">
             <div>
-              <p class="font-bold text-slate-800">${cliente.nombre}</p>
+              <p class="font-black text-slate-800">${cliente.nombre}</p>
               <p class="text-xs text-slate-500">${cliente.direccion}</p>
             </div>
             <button onclick="eliminarCliente(${cliente.id})" class="text-red-500 text-xs font-bold">✕</button>
@@ -403,7 +446,7 @@
       }
 
       lista.innerHTML = state.repartidores.map((rep) => `
-        <div class="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+        <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
           <div class="flex justify-between items-center">
             <div>
               <p class="font-bold text-slate-800">${rep.nombre}</p>
@@ -425,18 +468,18 @@
       lista.innerHTML = state.pedidos.map((pedido) => {
         const total = Number(pedido.cantidad || 0) * Number(pedido.precio || 0);
         return `
-          <div class="bg-white rounded-xl p-3 border border-slate-100 shadow-sm">
+          <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
             <div class="flex justify-between items-start gap-2 mb-2">
               <div>
                 <p class="font-black text-slate-800">${pedido.clienteNombre}</p>
-                <p class="text-[11px] text-slate-500">${pedido.producto || 'Hielo Picado'} · ${pedido.nota || 'Sin nota'}</p>
+                <p class="text-[11px] text-slate-500">${pedido.producto || 'Hielo'} · ${pedido.nota || 'Sin nota'}</p>
               </div>
               <button onclick="eliminarPedido(${pedido.id})" class="text-red-500 text-xs font-bold">✕</button>
             </div>
             <div class="grid grid-cols-3 gap-2 text-[11px] text-slate-600">
-              <div class="bg-slate-50 rounded-lg p-2"><span class="block text-slate-400">Bolsas</span><strong>${pedido.cantidad}</strong></div>
-              <div class="bg-slate-50 rounded-lg p-2"><span class="block text-slate-400">Precio</span><strong>${formatMoney(pedido.precio)}€</strong></div>
-              <div class="bg-slate-50 rounded-lg p-2"><span class="block text-slate-400">Total</span><strong>${formatMoney(total)}€</strong></div>
+              <div class="bg-slate-50 rounded-xl p-2"><span class="block text-slate-400">Cantidad</span><strong>${pedido.cantidad}</strong></div>
+              <div class="bg-slate-50 rounded-xl p-2"><span class="block text-slate-400">Precio</span><strong>${formatMoney(pedido.precio)}€</strong></div>
+              <div class="bg-slate-50 rounded-xl p-2"><span class="block text-slate-400">Total</span><strong>${formatMoney(total)}€</strong></div>
             </div>
             <div class="mt-2 text-[11px] text-slate-500">🚚 ${pedido.repartidorNombre}</div>
           </div>
@@ -448,18 +491,18 @@
       const clienteSel = document.getElementById('ped-cliente');
       const factSel = document.getElementById('fact-cliente-sel');
 
-      const optionsCliente = state.clientes.map((cliente) => `<option value="${cliente.id}">${cliente.nombre}</option>`).join('');
-      if (clienteSel) clienteSel.innerHTML = optionsCliente || '<option value="">No hay clientes</option>';
-      if (factSel) factSel.innerHTML = state.clientes.map((cliente) => `<option value="${cliente.id}">${cliente.nombre}</option>`).join('');
+      const clientesOpt = state.clientes.map((cliente) => `<option value="${cliente.id}">${cliente.nombre}</option>`).join('');
+      if (clienteSel) clienteSel.innerHTML = clientesOpt || '<option value="">No hay clientes</option>';
+      if (factSel) factSel.innerHTML = clientsOptForSelect(state.clientes);
 
       const repartidorSel = document.getElementById('ped-repartidor');
       if (repartidorSel) {
         repartidorSel.innerHTML = state.repartidores.map((rep) => `<option value="${rep.id}">${rep.nombre}</option>`).join('') || '<option value="">No hay repartidores</option>';
       }
+    }
 
-      if (factSel && factSel.children.length > 0) {
-        factSel.value = factSel.children[0].value;
-      }
+    function clientsOptForSelect(items) {
+      return items.length ? items.map((cliente) => `<option value="${cliente.id}">${cliente.nombre}</option>`).join('') : '<option value="">No hay clientes</option>';
     }
 
     function AbrirModalCliente() { document.getElementById('modal-cliente').classList.remove('hidden'); }
@@ -475,7 +518,6 @@
       renderSelects();
       document.getElementById('modal-pedido').classList.remove('hidden');
     }
-
     function CerrarModalPedido() {
       document.getElementById('modal-pedido').classList.add('hidden');
       document.getElementById('ped-cant-cubito').value = 0;
@@ -508,7 +550,9 @@
       state.clientes.push({ id: Date.now(), nombre, direccion, email, telefono });
       saveState();
       renderClientes();
+      renderKPIs();
       renderSelects();
+      renderResumenHoy();
       CerrarModalCliente();
     }
 
@@ -516,15 +560,17 @@
       event.preventDefault();
       const nombre = document.getElementById('local-nombre').value.trim();
       if (!nombre) return;
-      const direccion = document.getElementById('local-direccion').value.trim();
-      const categoria = document.getElementById('local-categoria').value.trim();
-      const telefono = document.getElementById('local-telefono').value.trim();
-      const notas = document.getElementById('local-notas').value.trim();
-      const pago = document.getElementById('local-pago').value;
 
-      const nuevo = { id: Date.now(), nombre, direccion, categoria, telefono, notas, pago };
-      state.locales = state.locales || [];
-      state.locales.push(nuevo);
+      state.locales.push({
+        id: Date.now(),
+        nombre,
+        direccion: document.getElementById('local-direccion').value.trim(),
+        categoria: document.getElementById('local-categoria').value.trim(),
+        telefono: document.getElementById('local-telefono').value.trim(),
+        notas: document.getElementById('local-notas').value.trim(),
+        pago: document.getElementById('local-pago').value
+      });
+
       saveState();
       renderLocales();
       CerrarModalLocal();
@@ -538,7 +584,6 @@
 
       const cliente = state.clientes.find((c) => c.id === clienteId);
       const repartidor = state.repartidores.find((r) => r.id === repartidorId);
-
       if (!cliente || !repartidor) return;
 
       const entries = [];
@@ -548,40 +593,18 @@
       const picadoPrecio = Number(document.getElementById('ped-precio-picado').value || 0);
 
       if (cubitoQty > 0) {
-        entries.push({
-          id: Date.now() + 1,
-          clienteId: cliente.id,
-          clienteNombre: cliente.nombre,
-          producto: 'Hielo Cubito',
-          cantidad: cubitoQty,
-          precio: cubitoPrecio,
-          repartidorId: repartidor.id,
-          repartidorNombre: repartidor.nombre,
-          nota,
-          fecha: new Date().toISOString()
-        });
+        entries.push({ id: Date.now() + 1, clienteId, clienteNombre: cliente.nombre, producto: 'Hielo Cubito', cantidad: cubitoQty, precio: cubitoPrecio, repartidorId, repartidorNombre: repartidor.nombre, nota, fecha: new Date().toISOString() });
       }
-
       if (picadoQty > 0) {
-        entries.push({
-          id: Date.now() + 2,
-          clienteId: cliente.id,
-          clienteNombre: cliente.nombre,
-          producto: 'Hielo Picado',
-          cantidad: picadoQty,
-          precio: picadoPrecio,
-          repartidorId: repartidor.id,
-          repartidorNombre: repartidor.nombre,
-          nota,
-          fecha: new Date().toISOString()
-        });
+        entries.push({ id: Date.now() + 2, clienteId, clienteNombre: cliente.nombre, producto: 'Hielo Picado', cantidad: picadoQty, precio: picadoPrecio, repartidorId, repartidorNombre: repartidor.nombre, nota, fecha: new Date().toISOString() });
       }
-
       if (!entries.length) return;
 
       state.pedidos.push(...entries);
       saveState();
       renderPedidos();
+      renderKPIs();
+      renderResumenHoy();
       CerrarModalPedido();
     }
 
@@ -592,10 +615,12 @@
       renderClientes();
       renderPedidos();
       renderSelects();
+      renderKPIs();
+      renderResumenHoy();
     }
 
     function eliminarLocal(id) {
-      state.locales = (state.locales || []).filter((l) => l.id !== id);
+      state.locales = state.locales.filter((l) => l.id !== id);
       saveState();
       renderLocales();
     }
@@ -607,18 +632,26 @@
       renderRepartidores();
       renderPedidos();
       renderSelects();
+      renderKPIs();
+      renderResumenHoy();
     }
 
     function eliminarPedido(id) {
       state.pedidos = state.pedidos.filter((p) => p.id !== id);
       saveState();
       renderPedidos();
+      renderKPIs();
+      renderResumenHoy();
     }
 
     function cambiarNombreEmpresa() {
-      const input = document.getElementById('config-nombre-empresa');
-      const nombre = input.value.trim() || 'HIELOS ICEMAN';
+      const nombre = document.getElementById('config-nombre-empresa').value.trim() || 'HIELOS ICEMAN';
       state.empresa = nombre;
+      saveState();
+      actualizarNombreEmpresaVisual();
+    }
+
+    function guardarDatosFiscales() {
       state.cif = document.getElementById('config-cif').value.trim();
       state.emailFacturacion = document.getElementById('config-email-fact').value.trim();
       saveState();
@@ -636,19 +669,18 @@
         return;
       }
 
-      const total = pedidosCliente.reduce((sum, p) => sum + (Number(p.cantidad || 0) * Number(p.precio || 0)), 0);
+      const total = pedidosCliente.reduce((sum, p) => sum + Number(p.cantidad || 0) * Number(p.precio || 0), 0);
       document.getElementById('fact-nom-cliente').textContent = cliente.nombre;
       document.getElementById('fact-dir-cliente').textContent = cliente.direccion;
       document.getElementById('fact-mail-cliente').textContent = cliente.email || 'Sin correo';
       document.getElementById('fact-mail-facturacion').textContent = state.emailFacturacion || 'Sin email facturación';
-      document.getElementById('fact-cif').textContent = state.cif || '';
+      document.getElementById('fact-cif').textContent = state.cif || 'Sin CIF/NIF';
       document.getElementById('fact-fecha').textContent = new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       document.getElementById('fact-lineas').innerHTML = pedidosCliente.map((p) => {
         const subtotal = Number(p.cantidad || 0) * Number(p.precio || 0);
-        const nombreProducto = p.producto || 'Hielo Picado';
         return `
           <div class="flex justify-between gap-2">
-            <span>${p.cantidad}x ${nombreProducto}</span>
+            <span>${p.cantidad}x ${p.producto || 'Hielo'}</span>
             <span>${formatMoney(subtotal)}€</span>
           </div>
         `;
@@ -669,9 +701,7 @@
     }
 
     function limpiarTodo() {
-      const confirmar = confirm('¿Seguro que quieres reiniciar la demo? Se perderán todos los datos locales.');
-      if (!confirmar) return;
-
+      if (!confirm('¿Seguro que quieres reiniciar la demo? Se perderán todos los datos.')) return;
       localStorage.removeItem(STORAGE_KEY);
       state = deepClone(defaultData);
       saveState();
@@ -679,48 +709,56 @@
       renderClientes();
       renderRepartidores();
       renderPedidos();
-      renderSelects();
       renderLocales();
+      renderKPIs();
+      renderResumenHoy();
+      renderSelects();
       document.getElementById('vista-factura').classList.add('hidden');
+    }
+
+    function actualizarNombreEmpresaVisual() {
+      const empresa = state.empresa || 'HIELOS ICEMAN';
+      document.getElementById('app-title').textContent = empresa.toUpperCase();
+      document.getElementById('fact-empresa-header').textContent = empresa.toUpperCase();
+      document.getElementById('config-nombre-empresa').value = empresa;
+      document.getElementById('config-cif').value = state.cif || '';
+      document.getElementById('config-email-fact').value = state.emailFacturacion || '';
     }
 
     function actualizarEstadoOffline() {
       const indicator = document.getElementById('offline-indicator');
-      if (navigator.onLine) {
-        indicator.classList.add('hidden');
-      } else {
-        indicator.classList.remove('hidden');
-      }
+      if (navigator.onLine) indicator.classList.add('hidden');
+      else indicator.classList.remove('hidden');
     }
 
     async function checkForUpdate() {
       try {
-        const url = './version.json?ts=' + Date.now();
-        const response = await fetch(url, { cache: 'no-store' });
+        const response = await fetch('./version.json?ts=' + Date.now(), { cache: 'no-store' });
         if (!response.ok) return;
         const data = await response.json();
         if (!data || !data.version || data.version === APP_VERSION) return;
-
-        const redirectUrl = new URL(window.location.href);
-        redirectUrl.searchParams.set('v', Date.now());
-        window.location.replace(redirectUrl.toString());
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set('v', Date.now());
+        window.location.replace(nextUrl.toString());
       } catch (error) {
-        console.warn('No se pudo comprobar versión nueva', error);
+        console.warn('No se pudo comprobar actualización.', error);
       }
     }
 
     function init() {
       actualizarNombreEmpresaVisual();
+      renderLocales();
       renderClientes();
       renderRepartidores();
       renderPedidos();
+      renderKPIs();
+      renderResumenHoy();
       renderSelects();
-      renderLocales();
       actualizarEstadoOffline();
+      setActiveTab('tab-dashboard');
       window.addEventListener('online', actualizarEstadoOffline);
       window.addEventListener('offline', actualizarEstadoOffline);
       checkForUpdate();
-      changeTab('tab-pedidos');
     }
 
     init();
